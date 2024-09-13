@@ -55,7 +55,7 @@ class Client_Data_Stream : public Transmit_Data{
             while(true){
                 unique_lock<mutex> lock(MutexObject);
                 cin.getline(SendBuffer, BUFFER);
-                Clear_Input_CommandLine();
+                Input_Clear::Clear_Input_CommandLine();
                 if(cin.fail()){
                     cerr << "Input Error: "<< strerror(errno) << endl;
                     cin.clear(); 
