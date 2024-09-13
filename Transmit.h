@@ -30,6 +30,9 @@ class Transmit_Data{
         virtual void Edit_Send(int Mode) = 0;
 };
 
-void Clear_Input_CommandLine();        // Edit with class
+class Input_Clear{
+    public:                           
+        static void Clear_Input_CommandLine(); 
+}
 
 #endif
