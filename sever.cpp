@@ -16,7 +16,7 @@ class Sever_Data_Stream : public Transmit_Data{
         mutex MutexObject;
         char ReceiveBuffer[BUFFER] = {0};
         char SendBuffer[BUFFER] = "Response from client"; 
-        int Stage, Option = 1;
+        int Stage;
 
         // Create socket connection
         Sever_Data_Stream(int Domain, int TypeSocket, int InternetProtocol, string Name){
@@ -131,7 +131,7 @@ class Sever_Data_Stream : public Transmit_Data{
             while(true){
                 unique_lock<mutex> lock(MutexObject);
                 cin.getline(SendBuffer, BUFFER);
-                Clear_Input_CommandLine();
+                Input_Clear::Clear_Input_CommandLine();
                 if(cin.fail()){
                     cerr << "Input Error: "<< strerror(errno) << endl;
                     cin.clear(); 
@@ -178,5 +178,5 @@ int main()
     SendThread.join();
     ReceiveThread.join();
     delete Sever;
- return 0;
+    return 0;
 }
