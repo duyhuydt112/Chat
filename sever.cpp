@@ -4,7 +4,6 @@
 using namespace std;
 
 // Global Variable
-std::mutex ExitFlagMutex;
 
 
 class Sever_Data_Stream : public Transmit_Data{

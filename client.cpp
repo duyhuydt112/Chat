@@ -11,6 +11,8 @@ class Client_Data_Stream : public Transmit_Data{
         char SendBuffer[BUFFER] = "Response from client"; 
         mutex MutexObject;
         int Stage;
+        thread SendThread;
+        thread ReceiveThread;
     public:
 
         // Config Client Socket
@@ -36,6 +38,14 @@ class Client_Data_Stream : public Transmit_Data{
         //using Sever_Data_Stream::Sever_Data_Stream
         
         ~Client_Data_Stream(){
+                
+            // Waiting Thread End
+            if (SendThread.joinable()) {
+                SendThread.join();
+            }
+            if (ReceiveThread.joinable()) {
+                ReceiveThread.join();
+            }
             close(ClientSocket);
             
         }
@@ -50,6 +60,10 @@ class Client_Data_Stream : public Transmit_Data{
             if((connect(ClientSocket, (struct sockaddr*)&ClientAddress, sizeof(ClientAddress))) < 0){
                 cerr << "Client Connected Error: "<< strerror(errno) << endl;
                 exit(EXIT_FAILURE);
+            }
+            else{
+                SendThread = thread(&Client_Data_Stream::Edit_Send, this, 0, ClientSocket);
+                ReceiveThread = thread(&Client_Data_Stream::Receive_Data, this, 0, ClientSocket);
             }
         }
         
@@ -117,21 +131,14 @@ class Client_Data_Stream : public Transmit_Data{
 
 
 
-// Global Variable
-std::mutex ExitFlagMutex;
-
 int main() 
 {
     Client_Data_Stream* Client = new Client_Data_Stream(AF_INET, SOCK_STREAM, 0);
     Client->Config_Socket(AF_INET, PORT, "127.0.0.1");
     Client->Client_Conneted();
-        // Create Thread for Send and Receive
-    thread SendThread(&Client_Data_Stream::Edit_Send, Client, 0);
-    thread ReceiveThread(&Client_Data_Stream::Receive_Data, Client, 0);
+  
     
-    // Waiting Thread End
-    SendThread.join();
-    ReceiveThread.join();
+
     delete Client;
 
 

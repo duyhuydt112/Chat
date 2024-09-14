@@ -14,14 +14,13 @@
 #include    <termios.h>
 #include    <vector>
 #include    <map>
-#include <arpa/inet.h>
+#include    <arpa/inet.h>
+#include    <pthread.h>
 
 // User Define
 #define PORT 4506
 #define BUFFER 1024 
 
-// User Global Variable 
-extern std::mutex ExitFlagMutex;
 
 // set namespace
 using namespace std;
