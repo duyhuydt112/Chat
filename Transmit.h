@@ -12,6 +12,9 @@
 #include    <condition_variable>
 #include    <mutex>
 #include    <termios.h>
+#include    <vector>
+#include    <map>
+#include <arpa/inet.h>
 
 // User Define
 #define PORT 4506
@@ -25,14 +28,14 @@ using namespace std;
 
 class Transmit_Data{
     public: 
-        virtual void Send_Data(int Mode) = 0;
-        virtual void Receive_Data(int Mode) = 0;
-        virtual void Edit_Send(int Mode) = 0;
+        virtual void Send_Data(int Mode, int ClientSocket) = 0;
+        virtual void Receive_Data(int Mode, int ClientSocket) = 0;
+        virtual void Edit_Send(int Mode, int ClientSocket) = 0;
 };
 
 class Input_Clear{
     public:                           
         static void Clear_Input_CommandLine(); 
-}
+};
 
 #endif
