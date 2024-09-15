@@ -1,15 +1,16 @@
-// Online C++ compiler to run C++ program online
 #include <iostream>
-#include <cstring>
-using namespace std;
-#define BUFFER 1024
+#include <vector>
+
 int main() {
-    char additionalText[BUFFER] = "Admin: ";
-    char SendBuffer[BUFFER];
-    // Write C++ code here
-    cin.getline(SendBuffer, BUFFER);
-    strcat(additionalText, SendBuffer);
-    std::cout << additionalText << endl;
+    std::vector<int> vec = {1, 2, 3, 4, 5};
+
+    // Xóa phần tử tại chỉ số 2 (phần tử có giá trị 3)
+    vec.erase(vec.begin() + 2);
+
+    // In ra kết quả
+    for (int num : vec) {
+        std::cout << num << " ";
+    }
 
     return 0;
 }

@@ -153,22 +153,22 @@ class Sever_Data_Stream : public Transmit_Data{
         }
         
 
-        // // Function for check name of client
-        // int Check_Client_Name(int ClientSocket){
-        //     int IndexNumber;
-        //     for(size_t index = 0; index < ClientSockets.size(); index++){
-        //         if(ClientSockets[index] == ClientSocket){
-        //             IndexNumber = index;
-        //         }
-        //     }
-        //     return IndexNumber;
-        // }
+        // Function for check name of client
+        int Check_Client_Name(int ClientSocket){
+            int IndexNumber;
+            for(size_t index = 0; index < ClientSockets.size(); index++){
+                if(ClientSockets[index] == ClientSocket){
+                    IndexNumber = index;
+                }
+            }
+            return IndexNumber;
+        }
 
 
         // Receive Text
         void Receive_Data(int Mode, int ClientSocket, string Name) override{
      
-            int loop = 0;
+            int loop = 0, IndexOfClient, ClientCloseFlag = 0;
             string Temp_Name = Name;
             string Temp_Variable;
             while(true){
@@ -180,7 +180,13 @@ class Sever_Data_Stream : public Transmit_Data{
                 }
                  else if(Receive_Stage == 0){   // cach de 1 client dong thi ko bao loi trong vong loop tiep theo
                     cout << "Client Disconnect " << endl;
+                    lock_guard<mutex> lock(MutexObject);
+                    ClientCloseFlag = ClientSocket;
+                    IndexOfClient = Check_Client_Name(ClientCloseFlag);
+                    ClientSockets.erase(ClientSockets.begin() + IndexOfClient);
+                    ClientCloseFlag = 1;
                     close(ClientSocket);
+                    break;
                 }
 
                 else{
@@ -197,6 +203,10 @@ class Sever_Data_Stream : public Transmit_Data{
 
                     Temp_Variable = Temp_Name + ": " + ReceiveBuffer;
                     cout << Temp_Variable << endl;
+                    if (ClientCloseFlag == 1){      
+                        ClientNames.erase(ClientNames.begin() + IndexOfClient);
+                        ClientCloseFlag = 0;
+                    }
                     strcpy(ReceiveBuffer, Temp_Variable.c_str());
                     for(size_t i = 0; i < ClientSockets.size(); i++){
                         if(ClientSockets[i] != ClientSocket){
