@@ -168,7 +168,8 @@ class Sever_Data_Stream : public Transmit_Data{
         // Receive Text
         void Receive_Data(int Mode, int ClientSocket, string Name) override{
      
-            int loop = 0, IndexOfClient, ClientCloseFlag = 0;
+            int loop = 0, IndexOfClient, FlagConnect;
+            size_t Index_Temp;
             string Temp_Name = Name;
             string Temp_Variable;
             while(true){
@@ -179,12 +180,13 @@ class Sever_Data_Stream : public Transmit_Data{
                     break;
                 }
                  else if(Receive_Stage == 0){   // cach de 1 client dong thi ko bao loi trong vong loop tiep theo
-                    cout << "Client Disconnect " << endl;
+                    
                     lock_guard<mutex> lock(MutexObject);
-                    ClientCloseFlag = ClientSocket;
-                    IndexOfClient = Check_Client_Name(ClientCloseFlag);
+                    IndexOfClient = Check_Client_Name(ClientSocket);
+                    Index_Temp = IndexOfClient;
+                    cout <<  ClientNames[Index_Temp] << " Disconnect " << endl;
                     ClientSockets.erase(ClientSockets.begin() + IndexOfClient);
-                    ClientCloseFlag = 1;
+                    ClientNames.erase(ClientNames.begin() + IndexOfClient);
                     close(ClientSocket);
                     break;
                 }
@@ -195,18 +197,21 @@ class Sever_Data_Stream : public Transmit_Data{
                         if(Temp_Name == "."){
                             Temp_Name = Name;
                             ClientNames.push_back(Temp_Name);
+                            
+                            continue;
                         }
-                        continue;
                         ClientNames.push_back(Temp_Name);
+                        FlagConnect = 1;
                         memset(ReceiveBuffer, 0, sizeof(ReceiveBuffer));
                     }
-
-                    Temp_Variable = Temp_Name + ": " + ReceiveBuffer;
-                    cout << Temp_Variable << endl;
-                    if (ClientCloseFlag == 1){      
-                        ClientNames.erase(ClientNames.begin() + IndexOfClient);
-                        ClientCloseFlag = 0;
+                    if(FlagConnect == 1){
+                        Temp_Variable = Temp_Name + " Connected";
+                        FlagConnect = 0;
                     }
+                    else 
+                        Temp_Variable = Temp_Name + ": " + ReceiveBuffer;
+                    cout << Temp_Variable << endl;
+                   
                     strcpy(ReceiveBuffer, Temp_Variable.c_str());
                     for(size_t i = 0; i < ClientSockets.size(); i++){
                         if(ClientSockets[i] != ClientSocket){
