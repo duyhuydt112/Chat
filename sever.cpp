@@ -143,7 +143,7 @@ class Sever_Data_Stream : public Transmit_Data{
 
         // receive message from client and send that data too all client
         void Receive_Send_Message(int Mode, int ClientSocket, const char* Buffer){
-            lock_guard<mutex> lock(MutexObject);
+            
             if((send(ClientSocket, Buffer, strlen(Buffer), Mode)) < 0){
                 cerr << "Send Message Error"<< strerror(errno) << endl;
                 return;
@@ -171,8 +171,9 @@ class Sever_Data_Stream : public Transmit_Data{
      
             int loop = 0;
             string Temp_Name = Name;
+            string Temp_Variable;
             while(true){
-                
+                Temp_Variable = "\0";
                 Stage = recv(ClientSocket, ReceiveBuffer, sizeof(ReceiveBuffer), Mode);
                 if(Stage  < 0){
                     cerr << "Receive Message Error: "<< strerror(errno) << endl;
@@ -194,9 +195,9 @@ class Sever_Data_Stream : public Transmit_Data{
                         ClientNames.push_back(Temp_Name);
                     }
 
-                    Temp_Name = Temp_Name + ": " + ReceiveBuffer;
-                    cout << Temp_Name << endl;
-                    strcpy(ReceiveBuffer, Temp_Name.c_str());
+                    Temp_Variable = Temp_Name + ": " + ReceiveBuffer;
+                    cout << Temp_Variable << endl;
+                    strcpy(ReceiveBuffer, Temp_Variable.c_str());
                     for(size_t i = 0; i < ClientSockets.size(); i++){
                         if(ClientSockets[i] != ClientSocket){
                             
@@ -204,7 +205,6 @@ class Sever_Data_Stream : public Transmit_Data{
                         } 
                     }
                     memset(ReceiveBuffer, 0, sizeof(ReceiveBuffer));
-
                 }
             }
             
