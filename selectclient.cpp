@@ -131,7 +131,7 @@ int main()
     Client_Data_Stream* Client = new Client_Data_Stream(AF_INET, SOCK_STREAM, 0);
     cout << "Hay Nhap Port: ";
     cin >> ClientPort; 
-    Client->Config_Socket(AF_INET, ClientPort, "127.0.0.1");
+    Client->Config_Socket(AF_INET, ClientPort, "127.0.0.2");
     Client->Client_Conneted();
   
     

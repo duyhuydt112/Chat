@@ -17,6 +17,7 @@ class Sever_Data_Stream : public Transmit_Data{
         char ReceiveBuffer[BUFFER] = {0};
         char SendBuffer[BUFFER] = "Response from client"; 
         int Stage, Option = 1;
+        vector <int> ClientSockets;
         vector <thread> ClientThreadS;
         socklen_t ClientAddressSize = sizeof(ClientAddress);
 
@@ -51,7 +52,8 @@ class Sever_Data_Stream : public Transmit_Data{
             
          }
     
-    
+        
+
         // Setting Sever Socket prototype
         void Config_Socket(short InternetProtocol, uint16_t Port, in_addr_t Adress){
             ServerAddress.sin_family = InternetProtocol; // AF_INET
@@ -88,6 +90,7 @@ class Sever_Data_Stream : public Transmit_Data{
 
         // Accept Connection with clients
         void Sever_Accept(){
+            int loop = 0;
             while(true){
                 ClientSocket = accept(SeverSocket, (struct sockaddr*)&ClientAddress, &ClientAddressSize);
                 if(ClientSocket < 0){
@@ -95,11 +98,14 @@ class Sever_Data_Stream : public Transmit_Data{
                     continue;
                 }
                 else{
-                      // Create Thread for Send and Receive
-                    ClientThreadS.emplace_back(&Sever_Data_Stream::Edit_Send, this, 0, ClientSocket);
+                    if(loop < 1){
+                        ClientThreadS.emplace_back(&Sever_Data_Stream::Edit_Send, this, 0, 0);
+                        loop++;
+                    }
+                    lock_guard<mutex> lock(MutexObject);
+                    ClientSockets.push_back(ClientSocket);
                     ClientThreadS.emplace_back(&Sever_Data_Stream::Receive_Data, this, 0, ClientSocket);
-                    // thread SendThread(&Sever_Data_Stream::Edit_Send, this, 0);
-                    // thread ReceiveThread(&Sever_Data_Stream::Receive_Data, this, 0);
+
 
                 }
                
@@ -115,8 +121,18 @@ class Sever_Data_Stream : public Transmit_Data{
                 return;
             }
             else
-                cout << "Sever: " << SendBuffer << endl;
-                strcpy(SendBuffer, "");
+                
+                return;
+        }
+
+        void Receive_Send_Data(int Mode, int ClientSocket, const char* Buffer){
+            lock_guard<mutex> lock(MutexObject);
+            if((send(ClientSocket, Buffer, strlen(Buffer), Mode)) < 0){
+                cerr << "Send Message Error"<< strerror(errno) << endl;
+                return;
+            }
+            else
+                return;
         }
         
         // Receive Text
@@ -126,16 +142,20 @@ class Sever_Data_Stream : public Transmit_Data{
                 Stage = recv(ClientSocket, ReceiveBuffer, sizeof(ReceiveBuffer), Mode);
                 if(Stage  < 0){
                     cerr << "Receive Message Error: "<< strerror(errno) << endl;
-                    return;
+                    break;
                 }
-                 else if(Stage == 0){
+                 else if(Stage == 0){   // cach de 1 client dong thi ko bao loi trong vong loop tiep theo
                     cout << "Client Disconnect " << endl;
                     close(ClientSocket);
                 }
 
                 else{
-                    lock_guard<mutex> lock(MutexObject);
                     cout << "Client: " << ReceiveBuffer << endl;
+                    for(size_t i = 0; i < ClientSockets.size(); i++){
+                        if(ClientSockets[i] != ClientSocket){
+                            Receive_Send_Data(0, ClientSockets[i], ReceiveBuffer); 
+                        } 
+                    }
                     memset(ReceiveBuffer, 0, sizeof(ReceiveBuffer));
 
                 }
@@ -154,7 +174,7 @@ class Sever_Data_Stream : public Transmit_Data{
         // Enter the sentence and change string
         void Edit_Send(int Mode, int ClientSocket) override{
             while(true){
-                
+                strcpy(SendBuffer, "");
                 cin.getline(SendBuffer, BUFFER);
                 Input_Clear::Clear_Input_CommandLine();
                 if(cin.fail()){
@@ -165,12 +185,16 @@ class Sever_Data_Stream : public Transmit_Data{
                 }
                 else{
                     if(strcmp(SendBuffer, "~") == 0){
-                        close(ClientSocket);
+                        for(size_t i = 0; i < ClientSockets.size(); i++){
+                            close(ClientSockets[i]);
+                        }
                         close(SeverSocket);
                     }
-                     
-                    Send_Data(Mode, ClientSocket);
-                    
+                    for(size_t i = 0; i < ClientSockets.size(); i++){
+                        Send_Data(0, ClientSockets[i]);
+                    }
+                    cout << "Sever: " << SendBuffer << endl; 
+              
                 }
                 
                 
@@ -193,14 +217,6 @@ int main()
     Sever->Sever_Bind();
     Sever->Sever_Listen(5);
     Sever->Sever_Accept();
-
-    // // Create Thread for Send and Receive
-    // thread SendThread(&Sever_Data_Stream::Edit_Send, Sever, 0);
-    // thread ReceiveThread(&Sever_Data_Stream::Receive_Data, Sever, 0);
-    
-    // // Waiting Thread End
-    // SendThread.join();
-    // ReceiveThread.join();
     delete Sever;
     return 0;
 }
