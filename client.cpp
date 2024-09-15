@@ -11,7 +11,7 @@ class Client_Data_Stream : public Transmit_Data{
         char ReceiveBuffer[BUFFER] = {0};
         char SendBuffer[BUFFER] = "Response from client"; 
         mutex MutexObject;
-        int Stage;
+        int Receive_Stage;
         thread SendThread;
         thread ReceiveThread;
         string ClientName;
@@ -37,8 +37,8 @@ class Client_Data_Stream : public Transmit_Data{
                 exit(EXIT_FAILURE);
             }
         }
-        //using Sever_Data_Stream::Sever_Data_Stream
-        
+
+        // Close Socket
         ~Client_Data_Stream(){
                 
             // Waiting Thread End
@@ -52,6 +52,7 @@ class Client_Data_Stream : public Transmit_Data{
             
         }
 
+        // Create Connect with sever
         void Client_Conneted(){
             if((connect(ClientSocket, (struct sockaddr*)&ClientAddress, sizeof(ClientAddress))) < 0){
                 cerr << "Client Connected Error: "<< strerror(errno) << endl;
@@ -117,12 +118,12 @@ class Client_Data_Stream : public Transmit_Data{
         // Receive Text
         void Receive_Data(int Mode, int ClientSocket, string Name) override{
             while(true){
-                Stage = recv(ClientSocket, ReceiveBuffer, sizeof(ReceiveBuffer), Mode);
-                if(Stage < 0){
+                Receive_Stage = recv(ClientSocket, ReceiveBuffer, sizeof(ReceiveBuffer), Mode);
+                if(Receive_Stage < 0){
                     cerr << "Receive Message Error: "<< strerror(errno) << endl;
                     return;
                 }
-                else if(Stage == 0){
+                else if(Receive_Stage == 0){
                     cout << "Sever Disconnect " << endl;
                     close(ClientSocket);
                     return;
@@ -139,17 +140,15 @@ class Client_Data_Stream : public Transmit_Data{
             }
             
         }
+
+        // Enter Information of clients
         void Enter_Client_Information(){
-            cout << "Hay Nhap Port: ";
+            cout << "Enter Port: ";
             cin >> ClientPort; 
-            cout << "Hay Nhap Ten Client: ";
+            cout << "Enter Client Name: ";
             cin >> ClientName;
 
         }
-
-        // void Close_Socket(Clien){
-
-        // }
 };  
 
 
@@ -161,11 +160,6 @@ int main()
     Client->Enter_Client_Information();
     Client->Config_Socket(AF_INET, "127.0.0.1");
     Client->Client_Conneted();
-  
-    
-
     delete Client;
-
-
     return 0;
 }

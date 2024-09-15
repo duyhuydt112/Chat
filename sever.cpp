@@ -16,7 +16,7 @@ class Sever_Data_Stream : public Transmit_Data{
         mutex MutexObject;
         char ReceiveBuffer[BUFFER] = {0};
         char SendBuffer[BUFFER] = "Response from client"; 
-        int Stage, Option = 1;
+        int Receive_Stage, Option = 1;
         vector <thread> ClientThreadS;
         vector <int> ClientSockets;
         vector <string> ClientNames;
@@ -165,7 +165,6 @@ class Sever_Data_Stream : public Transmit_Data{
         // }
 
 
-
         // Receive Text
         void Receive_Data(int Mode, int ClientSocket, string Name) override{
      
@@ -174,12 +173,12 @@ class Sever_Data_Stream : public Transmit_Data{
             string Temp_Variable;
             while(true){
                 Temp_Variable = "\0";
-                Stage = recv(ClientSocket, ReceiveBuffer, sizeof(ReceiveBuffer), Mode);
-                if(Stage  < 0){
+                Receive_Stage = recv(ClientSocket, ReceiveBuffer, sizeof(ReceiveBuffer), Mode);
+                if(Receive_Stage  < 0){
                     cerr << "Receive Message Error: "<< strerror(errno) << endl;
                     break;
                 }
-                 else if(Stage == 0){   // cach de 1 client dong thi ko bao loi trong vong loop tiep theo
+                 else if(Receive_Stage == 0){   // cach de 1 client dong thi ko bao loi trong vong loop tiep theo
                     cout << "Client Disconnect " << endl;
                     close(ClientSocket);
                 }
@@ -263,13 +262,8 @@ Sever_Data_Stream* Sever_Data_Stream::Object = nullptr;
 
 int main()
 {   
-    string SeverName;
-    // cout << "Enter Sever Name: ";
-    // cin >> SeverName;
     Sever_Data_Stream* Sever = Sever_Data_Stream::Create_Object("Hello");
-    
     Sever->Config_Socket(AF_INET, PORT, INADDR_ANY);
-    
     Sever->Set_Socket();
     Sever->Sever_Bind();
     Sever->Sever_Listen(5);
