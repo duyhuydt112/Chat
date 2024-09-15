@@ -193,6 +193,7 @@ class Sever_Data_Stream : public Transmit_Data{
                         }
                         continue;
                         ClientNames.push_back(Temp_Name);
+                        memset(ReceiveBuffer, 0, sizeof(ReceiveBuffer));
                     }
 
                     Temp_Variable = Temp_Name + ": " + ReceiveBuffer;
