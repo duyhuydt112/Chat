@@ -5,3 +5,4 @@ Segmentation fault (core dumped)
 + https://github.com/tapasrnk/multithreaded-client-server/tree/main
 + terminate called without an active exception
 Aborted (core dumped) 
++ https://www.canva.com/design/DAGQ1RwOAeg/WGTKpMiwOKqKpWfb-56eTA/edit?utm_content=DAGQ1RwOAeg&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
