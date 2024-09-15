@@ -1,0 +1,35 @@
+#Compiler
+GXX = g++
+
+#Output
+OUTPUT = Sever
+
+#Static Library
+LIB = libTransmit.a
+
+#File Object
+OBJECTS = Transmit.o sever.o
+
+#Lib Source
+LIBSOURCE = Transmit.cpp
+
+#Input
+SOURCES = sever.cpp 
+
+
+$(OUTPUT): $(OBJECTS) $(LIB)
+	$(GXX)  $(SOURCES) -L. -lTransmit -lpthread -o $(OUTPUT)
+
+Transmit.o: Transmit.cpp Transmit.h
+	$(GXX) -c Transmit.cpp -o Transmit.o
+
+$(LIB): Transmit.o
+	ar rcs $(LIB) Transmit.o
+
+run: $(OUTPUT)
+	./$(OUTPUT)
+
+#Clear
+clean:
+	rm -f *.o $(LIB) $(OUTPUT) $(OBJECTS)
+

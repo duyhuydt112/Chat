@@ -73,8 +73,8 @@ class Client_Data_Stream : public Transmit_Data{
                 return;
             }
             else
-                if(ClientName == ".") ClientName = "Unknow(You): ";
-                cout << ClientName << SendBuffer << endl;
+                if(ClientName == ".") ClientName = "Unknow(You)";
+                cout << ClientName << ": " << SendBuffer << endl;
                 strcpy(SendBuffer, "");
         }
         
