@@ -17,8 +17,9 @@ class Sever_Data_Stream : public Transmit_Data{
         char ReceiveBuffer[BUFFER] = {0};
         char SendBuffer[BUFFER] = "Response from client"; 
         int Stage, Option = 1;
-        vector <int> ClientSockets;
         vector <thread> ClientThreadS;
+        vector <int> ClientSockets;
+        vector <string> ClientNames;
         socklen_t ClientAddressSize = sizeof(ClientAddress);
 
         // Create socket connection
@@ -90,7 +91,8 @@ class Sever_Data_Stream : public Transmit_Data{
 
         // Accept Connection with clients
         void Sever_Accept(){
-            int loop = 0;
+            int loop = 0, NumOfCLient = 1;
+            char Index[10], Unknow[11];
             while(true){
                 ClientSocket = accept(SeverSocket, (struct sockaddr*)&ClientAddress, &ClientAddressSize);
                 if(ClientSocket < 0){
@@ -104,8 +106,9 @@ class Sever_Data_Stream : public Transmit_Data{
                     }
                     lock_guard<mutex> lock(MutexObject);
                     ClientSockets.push_back(ClientSocket);
-                    ClientThreadS.emplace_back(&Sever_Data_Stream::Receive_Data, this, 0, ClientSocket);
-
+                    strcpy(Unknow, "Unknown_");
+                    sprintf(Index, "%d", NumOfCLient++);
+                    ClientThreadS.emplace_back(&Sever_Data_Stream::Receive_Data, this, 0, ClientSocket, strcat(Unknow,Index));
 
                 }
                
@@ -125,7 +128,21 @@ class Sever_Data_Stream : public Transmit_Data{
                 return;
         }
 
-        void Receive_Send_Data(int Mode, int ClientSocket, const char* Buffer){
+        // Send Name
+        void Send_Name(int Mode, int ClientSocket, const char* Buffer) override {
+            unique_lock<mutex> lock(MutexObject);
+            if((send(ClientSocket, Buffer, strlen(Buffer), Mode)) < 0){
+                cerr << "Send Message Error: "<< strerror(errno) << endl;
+                return;
+            }
+            else
+                cout <<": " << SendBuffer << endl;
+                strcpy(SendBuffer, "");
+        }
+
+
+        // receive message from client and send that data too all client
+        void Receive_Send_Message(int Mode, int ClientSocket, const char* Buffer){
             lock_guard<mutex> lock(MutexObject);
             if((send(ClientSocket, Buffer, strlen(Buffer), Mode)) < 0){
                 cerr << "Send Message Error"<< strerror(errno) << endl;
@@ -135,8 +152,25 @@ class Sever_Data_Stream : public Transmit_Data{
                 return;
         }
         
+
+        // // Function for check name of client
+        // int Check_Client_Name(int ClientSocket){
+        //     int IndexNumber;
+        //     for(size_t index = 0; index < ClientSockets.size(); index++){
+        //         if(ClientSockets[index] == ClientSocket){
+        //             IndexNumber = index;
+        //         }
+        //     }
+        //     return IndexNumber;
+        // }
+
+
+
         // Receive Text
-        void Receive_Data(int Mode, int ClientSocket) override{
+        void Receive_Data(int Mode, int ClientSocket, string Name) override{
+     
+            int loop = 0;
+            string Temp_Name = Name;
             while(true){
                 
                 Stage = recv(ClientSocket, ReceiveBuffer, sizeof(ReceiveBuffer), Mode);
@@ -150,10 +184,23 @@ class Sever_Data_Stream : public Transmit_Data{
                 }
 
                 else{
-                    cout << "Client: " << ReceiveBuffer << endl;
+                    if(loop++ == 0){
+                        Temp_Name = ReceiveBuffer;
+                        if(Temp_Name == "."){
+                            Temp_Name = Name;
+                            ClientNames.push_back(Temp_Name);
+                        }
+                        continue;
+                        ClientNames.push_back(Temp_Name);
+                    }
+
+                    Temp_Name = Temp_Name + ": " + ReceiveBuffer;
+                    cout << Temp_Name << endl;
+                    strcpy(ReceiveBuffer, Temp_Name.c_str());
                     for(size_t i = 0; i < ClientSockets.size(); i++){
                         if(ClientSockets[i] != ClientSocket){
-                            Receive_Send_Data(0, ClientSockets[i], ReceiveBuffer); 
+                            
+                            Receive_Send_Message(0, ClientSockets[i], ReceiveBuffer); 
                         } 
                     }
                     memset(ReceiveBuffer, 0, sizeof(ReceiveBuffer));
@@ -171,11 +218,14 @@ class Sever_Data_Stream : public Transmit_Data{
             return Object;
         }
 
-        // Enter the sentence and change string
+        // Enter the sentence and change string from sever to all clients
         void Edit_Send(int Mode, int ClientSocket) override{
+            char AdditionalText[BUFFER];
             while(true){
-                strcpy(SendBuffer, "");
-                cin.getline(SendBuffer, BUFFER);
+                memset(SendBuffer, 0, sizeof(SendBuffer));
+                cin.getline(AdditionalText, BUFFER);
+                strcat(SendBuffer, "Admin: ");
+                strcat(SendBuffer, AdditionalText);
                 Input_Clear::Clear_Input_CommandLine();
                 if(cin.fail()){
                     cerr << "Input Error: "<< strerror(errno) << endl;
@@ -193,7 +243,8 @@ class Sever_Data_Stream : public Transmit_Data{
                     for(size_t i = 0; i < ClientSockets.size(); i++){
                         Send_Data(0, ClientSockets[i]);
                     }
-                    cout << "Sever: " << SendBuffer << endl; 
+                    cout << SendBuffer << endl; 
+                    memset(AdditionalText, 0, sizeof(AdditionalText));
               
                 }
                 
@@ -210,9 +261,14 @@ class Sever_Data_Stream : public Transmit_Data{
 Sever_Data_Stream* Sever_Data_Stream::Object = nullptr;
 
 int main()
-{
-    Sever_Data_Stream* Sever = Sever_Data_Stream::Create_Object("Phat_Sever");
+{   
+    string SeverName;
+    // cout << "Enter Sever Name: ";
+    // cin >> SeverName;
+    Sever_Data_Stream* Sever = Sever_Data_Stream::Create_Object("Hello");
+    
     Sever->Config_Socket(AF_INET, PORT, INADDR_ANY);
+    
     Sever->Set_Socket();
     Sever->Sever_Bind();
     Sever->Sever_Listen(5);

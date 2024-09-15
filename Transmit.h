@@ -13,7 +13,6 @@
 #include    <mutex>
 #include    <termios.h>
 #include    <vector>
-#include    <map>
 #include    <arpa/inet.h>
 #include    <pthread.h>
 #include    <sys/select.h>
@@ -26,11 +25,14 @@
 // set namespace
 using namespace std;
 
+
+
 class Transmit_Data{
     public: 
         virtual void Send_Data(int Mode, int ClientSocket) = 0;
-        virtual void Receive_Data(int Mode, int ClientSocket) = 0;
+        virtual void Receive_Data(int Mode, int ClientSocket, string Name) = 0;
         virtual void Edit_Send(int Mode, int ClientSocket) = 0;
+        virtual void Send_Name(int Mode, int ClientSocket, const char* Buffer) = 0;
 };
 
 class Input_Clear{
